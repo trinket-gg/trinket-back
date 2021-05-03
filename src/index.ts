@@ -23,7 +23,7 @@ server.get('/ping', opts, async (request, reply) => {
 
 const start = async () => {
   try {
-    await server.listen(4000)
+    await server.listen(4000, '0.0.0.0')
 
     console.log('yes')
 
