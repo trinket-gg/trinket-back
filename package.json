@@ -1,22 +1,20 @@
 {
   "dependencies": {
     "fastify": "^3.15.1",
+    "fastify-autoload": "^3.7.1",
     "fastify-plugin": "^3.0.0",
     "mongodb": "^3.6.6",
-    "mongoose": "^5.12.7",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "mongoose": "^5.12.7"
   },
   "name": "back",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "index.js",
   "devDependencies": {
-    "@types/node": "^15.0.1",
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.7"
   },
   "scripts": {
-    "dev": "nodemon --watch 'src/' --ext 'ts,json' --exec 'ts-node src/index.ts'"
+    "dev": "nodemon src/index.js"
   },
   "author": "",
   "license": "ISC",
