@@ -11,7 +11,7 @@ const fastify = require('fastify')({
 try {
   mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 } catch (e) {
-  console.error(e);
+  console.error(e)
 }
 
 fastify.register(autoload, { dir: path.join(__dirname, 'routes')})

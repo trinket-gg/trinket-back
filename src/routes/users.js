@@ -36,6 +36,28 @@ async function routes(fastify, options) {
 
   })
 
+  fastify.patch('/:userId', async (request, reply) => {
+
+    const user = await userSchema.findById(request.params.userId)
+
+    if (user) {
+      try {
+        user.set(request.body)
+        await user.save()
+
+        reply.code(200)
+        return { res: 'User updated successfully' }
+      } catch (err) {
+        reply.code(400)
+        return { res: err.message }
+      }
+    } else {
+      reply.code(404)
+      return { res: 'User not found' }
+    }
+
+  })
+
   fastify.delete('/:userId', async (request, reply) => {
 
     const result = await userSchema.findByIdAndRemove(request.params.userId)

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   username: { type : String, required: true },
   username_riot: { type: String, required: true },
   birthdate: Date
-});
+})
 
 userSchema.pre('save', async function(next) {
 
@@ -27,7 +27,7 @@ userSchema.pre('save', async function(next) {
     return next(error)
   }
 
-});
+})
 
 const User = mongoose.model('users', userSchema)
 
