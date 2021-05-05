@@ -9,7 +9,7 @@ const fastify = require('fastify')({
 })
 
 try {
-  mongoose.connect(process.env.DB_URL)
+  mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 } catch (e) {
   console.error(e);
 }
