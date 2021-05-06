@@ -1,12 +1,11 @@
-const path = require('path')
-const autoload = require('fastify-autoload')
-const mongoose = require('mongoose')
-
+import Fastify, { FastifyInstance, RouteShorthandOptions } from 'fastify';
+import fastifyAutoload from "fastify-autoload";
 require('dotenv').config()
 
-const fastify = require('fastify')({
-  logger: true
-})
+const path = require('path')
+const mongoose = require('mongoose')
+
+const fastify: FastifyInstance = Fastify({});
 
 try {
   mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -14,7 +13,7 @@ try {
   console.error(e)
 }
 
-fastify.register(autoload, { dir: path.join(__dirname, 'routes')})
+fastify.register(fastifyAutoload, { dir: path.join(__dirname, 'routes')})
 
 const start = async () => {
   try {
@@ -24,4 +23,4 @@ const start = async () => {
     process.exit(1)
   }
 }
-start()
+start();
