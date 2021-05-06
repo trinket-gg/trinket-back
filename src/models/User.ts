@@ -1,19 +1,28 @@
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
+import mongoose, {Schema, Document} from 'mongoose'
+const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema({
+export interface IUser extends Document {
+  _id: string,
+  email: string,
+  password: string,
+  username: string,
+  username_riot: string,
+  birthdate: Date
+}
+
+const userSchema = new Schema({
   _id: mongoose.Schema.Types.ObjectId,
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   username: { type : String, required: true },
   username_riot: { type: String, required: true },
   birthdate: Date
-})
+});
 
-userSchema.pre('save', async function(next) {
+userSchema.pre<IUser>('save', async function(next: any) {
 
   if (this.isModified('email')) {
-    const emailExists = await User.exists({ email: this.email })
+    const emailExists: boolean = await User.exists({ email: this.email })
     if (emailExists) return next(new Error('Email already exists !'))
   }
 
@@ -29,6 +38,6 @@ userSchema.pre('save', async function(next) {
 
 })
 
-const User = mongoose.model('users', userSchema)
+const User = mongoose.model<IUser>('User', userSchema)
 
-module.exports = User
+export default User
