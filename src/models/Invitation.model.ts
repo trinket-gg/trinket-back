@@ -9,7 +9,6 @@ export interface IInvitation extends Document {
 
 const invitationSchema = new Schema({
     _id: mongoose.Schema.Types.ObjectId,
-    status: { type: String, required: true },
     
     team_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
     user_id: {  type: mongoose.Schema.Types.ObjectId, ref: 'User' }
