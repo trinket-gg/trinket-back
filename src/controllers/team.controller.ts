@@ -34,7 +34,6 @@ export class TeamController {
                     if(user){
                         const invitation: IInvitation = new Invitation({
                             _id : new mongoose.Types.ObjectId(),
-                            status : "inProgress",
                             team_id : team.id,
                             user_id : id,
                         });
