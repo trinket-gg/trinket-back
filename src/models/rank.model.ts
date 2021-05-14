@@ -27,4 +27,4 @@ rankSchema.pre<IRank>('save', async function(next: any) {
 
 });
 
-export const Rank = mongoose.model<IRank>('User', rankSchema);
+export const Rank = mongoose.model<IRank>('Rank', rankSchema);
