@@ -7,7 +7,7 @@ export interface ITeam extends Document {
     logo: string,
     last_game_date: Date,
     status: boolean,
-    rang_id: string,
+    elo: number,
     admin_id: string,
     user_ids: Array<string>
 }
@@ -20,7 +20,7 @@ const teamSchema = new Schema({
     last_game_date: Date,
     status: Boolean, // 0 --> provisionnal | 1 --> ranked
 
-    rang_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Rank' },
+    elo: { type: Number, default: 500 },
     admin_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     user_ids: {
         type: [
@@ -43,6 +43,12 @@ teamSchema.pre<ITeam>('save', async function(next: any) {
     if (this.isModified('tag')) {
         const tagExists = await Team.exists({ tag: this.tag });
         if (tagExists) return next(new Error('Tag already exists !'));
+    }
+
+    if (this.isModified('elo')) {
+        if (this.elo < 0) {
+            this.elo = 0;
+        }
     }
 
     return next();
