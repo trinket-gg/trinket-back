@@ -1,5 +1,4 @@
 import mongoose, {Schema, Document} from 'mongoose';
-import {RankController, RankInfo} from "../controllers";
 
 export interface ITeam extends Document {
     _id: string,
