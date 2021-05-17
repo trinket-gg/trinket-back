@@ -1,11 +1,15 @@
-import Fastify, { FastifyInstance, RouteShorthandOptions } from 'fastify';
-import fastifyAutoload from "fastify-autoload";
-require('dotenv').config()
+import express, { Express } from "express";
+import bodyParser from "body-parser";
+
+import { config } from "dotenv";
+config();
+
+import { buildRoutes } from "./routes";
+
+const app: Express = express();
 
 const path = require('path')
 const mongoose = require('mongoose')
-
-const fastify: FastifyInstance = Fastify({});
 
 try {
   mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -13,14 +17,11 @@ try {
   console.error(e)
 }
 
-fastify.register(fastifyAutoload, { dir: path.join(__dirname, 'routes')})
+app.use(express.json())
 
-const start = async () => {
-  try {
-    await fastify.listen(4000, '0.0.0.0')
-  } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
-  }
-}
-start();
+buildRoutes(app)
+
+const port = 4000;
+app.listen(port, '0.0.0.0', function() {
+    console.log(`Listening on ${port}...`);
+});

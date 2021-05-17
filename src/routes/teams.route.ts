@@ -1,105 +1,113 @@
 import mongoose from 'mongoose';
-import { Team } from '../models';
+import express from "express";
+import { Team, ITeam } from '../models';
 import { TeamController } from '../controllers';
 
-async function routes(fastify: any, options: any) {
+const teamRouter = express.Router()
 
-    /**
-     * Get all teams
-     */
-    fastify.get('/', async (request: any, reply: any) => {
-        const result = await Team.find();
-        return reply.code(200).send({ res: result });
+/**
+ * Get all teams
+ */
+ teamRouter.get('/', async (req: any, res: any) => {
+    const result = await Team.find();
+    res.json({ res: result });
+})
+
+/**
+ * Get team by id
+ */
+teamRouter.get('/:teamId', async (req: any, res: any) => {
+
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+    const result = await Team.findById(req.params.teamId);
+
+    if (result) {
+        res.json({ res: result });
+    } else {
+        res.status(404).end();
+    }
+})
+
+/**
+ * Create new team
+ */
+teamRouter.post('/', async (req: any, res: any) => {
+
+    const team = new Team({
+        _id: new mongoose.Types.ObjectId(),
+        ...req.body
     })
 
-    /**
-     * Get team by id
-     */
-    fastify.get('/:teamId', async (request: any, reply: any) => {
-        const result = await Team.findById(request.params.teamId);
-        if (result) {
-            return reply.code(200).send({ res: result });
-        } else {
-            return reply.code(404).send('');
-        }
-    })
+    try {
+        const newTeam = await team.save();
+        res.status(201).json({ res: newTeam });
+    } catch (err) {
+        res.status(400).end();
+    }
+})
 
-    /**
-     * Create new team
-     */
-    fastify.post('/', async (request: any, reply: any) => {
-        const team = new Team({
-            _id: new mongoose.Types.ObjectId(),
-            ...request.body
-        })
+/**
+ * Update created team
+ */
+teamRouter.patch('/:teamId', async (req: any, res: any) => {
 
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+    const team = await Team.findById(req.params.teamId);
+
+    if (team) {
         try {
-            const newTeam = await team.save();
-            return reply.code(201).send({ res: newTeam });
+            team.set(req.body);
+            await team.save();
+
+            res.status(200).end();
         } catch (err) {
-            return reply.code(400).send('');
+            res.status(400).end();
         }
-    })
+    } else {
+        return res.status(404).end();
+    }
 
-    /**
-     * Update created team
-     */
-    fastify.patch('/:teamId', async (request: any, reply: any) => {
+})
 
-        const team = await Team.findById(request.params.teamId);
+/**
+ * Allow users to invite new players in their team 
+ */
+teamRouter.post('/invitation/:teamId', async (req: any, res: any) => {
 
-        if (team) {
-            try {
-                team.set(request.body);
-                await team.save();
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
-                return reply.code(200).send('');
-            } catch (err) {
-                return reply.code(400).send('');
-            }
-        } else {
-            return reply.code(404).send('');
-        }
+    const teamExist = await Team.findById(req.params.teamId)
 
-    })
+    if (!teamExist) return res.status(404).end();
 
-    /**
-     * Allow users to invite new players in their team 
-     */
-    fastify.post('/invitation/:teamId', async (request: any, reply: any) => {
-        const teamExist = await Team.findById(request.params.teamId)
-        const userIds = request.body.user_ids;
-        if (!teamExist) {
-            return reply.code(404).send('');
-        }
+    const userIds = req.body.user_ids;
 
-        if(userIds === undefined) {
-            return reply.code(400).send('');
-        }
-        
-        const teamController = new TeamController();
-        const inviteUsers = await teamController.inviteUsers(userIds, teamExist);
-
-        if(!inviteUsers){
-            return reply.code(409).send('');
-        }
-            
-        return reply.code(200).send('');
-    })
-
-    /**
-     * Delete team
-     */
-    fastify.delete('/:teamId', async (request: any, reply: any) => {
-        const result = await Team.findByIdAndRemove(request.params.teamId);
-        if (result) {
-            return reply.code(204).send('');
-        } else {
-            return reply.code(404).send('');
-        }
-    })
+    if(userIds === undefined) return res.status(400).end();
     
-}
+    const teamController = new TeamController();
+    const inviteUsers = await teamController.inviteUsers(userIds, teamExist);
 
-module.exports = routes;
-module.exports.autoPrefix = '/teams';
+    if(!inviteUsers) return res.status(409).end();
+        
+    res.status(200).end();
+})
+
+/**
+ * Delete team
+ */
+teamRouter.delete('/:teamId', async (req: any, res: any) => {
+
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+    const result = await Team.findByIdAndRemove(req.params.teamId);
+
+    if (result) {
+        res.status(204).end();
+    } else {
+        res.status(404).end();
+    }
+})
+
+export { teamRouter }
