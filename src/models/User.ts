@@ -7,7 +7,8 @@ export interface IUser extends Document {
   password: string,
   username: string,
   username_riot: string,
-  birthdate: Date
+  birthdate: Date,
+  tokens: [string]
 }
 
 const userSchema = new Schema({
@@ -16,7 +17,8 @@ const userSchema = new Schema({
   password: { type: String, required: true },
   username: { type : String, required: true },
   username_riot: { type: String, required: true },
-  birthdate: Date
+  birthdate: Date,
+  tokens: [String]
 });
 
 userSchema.pre<IUser>('save', async function(next: any) {
