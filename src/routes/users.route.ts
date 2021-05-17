@@ -1,14 +1,19 @@
 import mongoose from 'mongoose';
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
 
 async function routes(fastify: any, options: any) {
 
+
+  // Get all users
   fastify.get('/', async () => {
     const result = await User.find()
     return { res: result }
   })
-
+  
+  // Get one user
   fastify.get('/:userId', async (request: any, reply: any) => {
     const result = await User.findById(request.params.userId)
     if (result) {
@@ -19,6 +24,8 @@ async function routes(fastify: any, options: any) {
     }
   })
 
+
+  // Create user
   fastify.post('/', async (request: any, reply: any) => {
 
     const user = new User({
@@ -37,6 +44,35 @@ async function routes(fastify: any, options: any) {
 
   })
 
+  // Login User
+  fastify.post('/login', async (request: any, reply: any) => {
+
+    const user = await User.findOne({ email: request.body?.email })
+
+    if (user) {
+
+      const validPwd = await bcrypt.compare(request.body?.password ?? '', user.password)
+      if (!validPwd) return reply.code(400).send('')
+
+      const token = jwt.sign({ _id : user._id }, process.env.TOKEN_SECRET)
+
+      try {
+        user.tokens.push(token)
+        await user.save()
+      } catch (err) {
+        return reply.code(400).reply('')
+      }
+      
+      return reply.code(200).send(token)
+
+    } else {
+      return reply.code(404).send('')
+    }
+
+  })
+
+
+  // Update one user
   fastify.patch('/:userId', async (request: any, reply: any) => {
 
     const user = await User.findById(request.params.userId)
@@ -85,6 +121,7 @@ async function routes(fastify: any, options: any) {
     return reply.code(200).send('');
   })
 
+  // Delete one user
   fastify.delete('/:userId', async (request: any, reply: any) => {
 
     const result = await User.findByIdAndRemove(request.params.userId)
