@@ -1,4 +1,3 @@
-export * from './rank.model';
-export * from './Team.model';
-export * from './User.model';
-export * from './Invitation.model';
+export * from './team.model';
+export * from './user.model';
+export * from './invitation.model';

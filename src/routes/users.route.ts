@@ -1,140 +1,151 @@
 import mongoose from 'mongoose';
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
 
-async function routes(fastify: any, options: any) {
+const userRouter = express.Router()
 
+/**
+ * Get all users
+ */
+userRouter.get('/', async (_, res: any) => {
+  const result = await User.find()
+  res.json(result)
+})
 
-  // Get all users
-  fastify.get('/', async () => {
-    const result = await User.find()
-    return { res: result }
-  })
+/**
+ * Get user by id
+ */
+userRouter.get('/:userId', async (req: any, res: any) => {
   
-  // Get one user
-  fastify.get('/:userId', async (request: any, reply: any) => {
-    const result = await User.findById(request.params.userId)
-    if (result) {
-      return { res: result }
-    } else {
-      reply.code(404)
-      return { res: 'User not found' }
-    }
+  if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+  const result = await User.findById(req.params.userId)
+  
+  if (result) {
+    res.json({ res: result })
+  } else {
+    res.status(404).end()
+  }
+
+})
+
+
+/**
+ * Create new user
+ */
+userRouter.post('/', async (req: any, res: any) => {
+
+  const user = new User({
+    _id: new mongoose.Types.ObjectId(),
+    ...req.body
   })
 
+  try { 
+    const newUser = await user.save()
+    res.status(201).json({ res: newUser })
+  } catch (err) { 
+    res.status(400).end()
+  }
 
-  // Create user
-  fastify.post('/', async (request: any, reply: any) => {
+})
 
-    const user = new User({
-      _id: new mongoose.Types.ObjectId(),
-      ...request.body
-    })
+/**
+ * User created login
+ */
+userRouter.post('/login', async (req: any, res: any) => {
 
-    try { 
-      const newUser = await user.save()
-      reply.code(201)
-      return { res: newUser }
-    } catch (err) { 
-      reply.code(400)
-      return { res: err.message }
+  const user = await User.findOne({ email: req.body?.email })
+
+  if (user) {
+
+    const validPwd = await bcrypt.compare(req.body?.password ?? '', user.password)
+    if (!validPwd) return res.status(400).end()
+
+    const token = jwt.sign({ _id : user._id }, process.env.TOKEN_SECRET)
+
+    try {
+      user.tokens.push(token)
+      await user.save()
+    } catch (err) {
+      return res.status(400).end()
     }
+    
+    res.status(200).json({ res: token })
 
-  })
+  } else {
+    res.status(404).end()
+  }
 
-  // Login User
-  fastify.post('/login', async (request: any, reply: any) => {
+})
 
-    const user = await User.findOne({ email: request.body?.email })
 
-    if (user) {
+/**
+ * Update user
+ */
+userRouter.patch('/:userId', async (req: any, res: any) => {
 
-      const validPwd = await bcrypt.compare(request.body?.password ?? '', user.password)
-      if (!validPwd) return reply.code(400).send('')
+  if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
-      const token = jwt.sign({ _id : user._id }, process.env.TOKEN_SECRET)
+  const user = await User.findById(req.params.userId)
 
-      try {
-        user.tokens.push(token)
-        await user.save()
-      } catch (err) {
-        return reply.code(400).reply('')
-      }
+  if (user) {
+    try {
+      user.set(req.body)
+      await user.save()
+
+      res.status(200).end()
+    } catch (err) {
+      res.status(400).end()
+    }
+  } else {
+    return res.status(404).end()
+  }
+
+})
+
+/**
+ * Allow users to invite new players in their team 
+ */
+userRouter.post('/invitation/:teamId', async (req: any, res: any) => {
+
+  if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+  const teamExist = await Team.findById(req.params.teamId)        
+  if (!teamExist) return res.status(404).end();
+    
+  const userres = req.body.res;
+  if (userres === undefined) return res.status(404).end();
+
+  // Get user id by COOKIE
+  
+  // Add verif
+
+  const userController = new UserController();
+  const resInvitation = await userController.replyInvitation("609c09c4a9e7f40469c7e163", req.params.teamId, userres);
+
+  if(!resInvitation) return res.status(409).end();
       
-      return reply.code(200).send(token)
+  res.status(200).end();
+})
 
-    } else {
-      return reply.code(404).send('')
-    }
+/**
+ * Delete user
+ */
+userRouter.delete('/:userId', async (req: any, res: any) => {
 
-  })
+  if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
+  const result = await User.findByIdAndRemove(req.params.userId)
 
-  // Update one user
-  fastify.patch('/:userId', async (request: any, reply: any) => {
+  if (result) {
+    res.status(204).end()
+  } else {
+    res.status(404).end()
+  }
 
-    const user = await User.findById(request.params.userId)
+})
 
-    if (user) {
-      try {
-        user.set(request.body)
-        await user.save()
-
-        reply.code(200)
-        return { res: 'User updated successfully' }
-      } catch (err) {
-        reply.code(400)
-        return { res: err.message }
-      }
-    } else {
-      reply.code(404)
-      return { res: 'User not found' }
-    }
-
-  })
-
-  /**
-   * Allow users to invite new players in their team 
-   */
-  fastify.post('/invitation/:teamId', async (request: any, reply: any) => {
-    const teamExist = await Team.findById(request.params.teamId)        
-    if (!teamExist)
-      return reply.code(404).send('');
-    
-    const userReply = request.body.reply;
-    if (userReply === undefined)
-      return reply.code(404).send('');
-
-    // Get user id by COOKIE
-    
-    // Add verif
-
-    const userController = new UserController();
-    const replyInvitation = await userController.replyInvitation("609c09c4a9e7f40469c7e163", request.params.teamId, userReply);
-
-    if(!replyInvitation){
-        return reply.code(409).send('');
-    }
-        
-    return reply.code(200).send('');
-  })
-
-  // Delete one user
-  fastify.delete('/:userId', async (request: any, reply: any) => {
-
-    const result = await User.findByIdAndRemove(request.params.userId)
-    if (result) {
-      reply.code(204)
-    } else {
-      reply.code(404)
-      return { res: 'User not found' }
-    }
-
-  })
-
-}
-
-module.exports = routes
-module.exports.autoPrefix = '/users'
+export { userRouter }
