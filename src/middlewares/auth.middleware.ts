@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-import User from '../models/User'
+import { User } from '../models'
 
 export default async function authMiddleware(request: any, reply: any, next: any) {
 

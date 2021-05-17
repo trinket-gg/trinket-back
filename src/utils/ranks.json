@@ -1,0 +1,33 @@
+{ "ranks": [
+    {
+      "name": "Bronze",
+      "lowRange": 0,
+      "highRange": 500
+    },
+  {
+      "name": "Silver",
+      "lowRange": 500,
+      "highRange": 1000
+    },
+  {
+      "name": "Gold",
+      "lowRange": 1000,
+      "highRange": 1500
+    },
+  {
+      "name": "Platinum",
+      "lowRange": 1500,
+      "highRange": 2000
+    },
+  {
+      "name": "Diamond",
+      "lowRange": 2000,
+      "highRange": 2500
+    },
+  {
+      "name": "Master",
+      "lowRange": 2500,
+      "highRange": -1
+    }
+  ]
+}

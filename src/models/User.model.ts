@@ -42,4 +42,4 @@ userSchema.pre<IUser>('save', async function(next: any) {
 
 const User = mongoose.model<IUser>('User', userSchema)
 
-export default User
+export { User }

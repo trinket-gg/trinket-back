@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-import User from '../models/User'
-import auth from '../middlewares/auth.middleware'
+import { UserController } from '../controllers/user.controller';
+import { Team, User } from '../models'
 
 async function routes(fastify: any, options: any) {
 
@@ -95,6 +95,31 @@ async function routes(fastify: any, options: any) {
 
   })
 
+  /**
+   * Allow users to invite new players in their team 
+   */
+  fastify.post('/invitation/:teamId', async (request: any, reply: any) => {
+    const teamExist = await Team.findById(request.params.teamId)        
+    if (!teamExist)
+      return reply.code(404).send('');
+    
+    const userReply = request.body.reply;
+    if (userReply === undefined)
+      return reply.code(404).send('');
+
+    // Get user id by COOKIE
+    
+    // Add verif
+
+    const userController = new UserController();
+    const replyInvitation = await userController.replyInvitation("609c09c4a9e7f40469c7e163", request.params.teamId, userReply);
+
+    if(!replyInvitation){
+        return reply.code(409).send('');
+    }
+        
+    return reply.code(200).send('');
+  })
 
   // Delete one user
   fastify.delete('/:userId', async (request: any, reply: any) => {
