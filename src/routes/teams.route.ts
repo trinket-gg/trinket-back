@@ -8,7 +8,7 @@ const teamRouter = express.Router()
 /**
  * Get all teams
  */
- teamRouter.get('/', async (req: any, res: any) => {
+ teamRouter.get('/', async (_, res: express.Response) => {
     const result = await Team.find();
     res.json({ res: result });
 })
@@ -16,7 +16,7 @@ const teamRouter = express.Router()
 /**
  * Get team by id
  */
-teamRouter.get('/:teamId', async (req: any, res: any) => {
+teamRouter.get('/:teamId', async (req: express.Request, res: express.Response) => {
 
     if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -32,7 +32,7 @@ teamRouter.get('/:teamId', async (req: any, res: any) => {
 /**
  * Create new team
  */
-teamRouter.post('/', async (req: any, res: any) => {
+teamRouter.post('/', async (req: express.Request, res: express.Response) => {
 
     const team = new Team({
         _id: new mongoose.Types.ObjectId(),
@@ -50,7 +50,7 @@ teamRouter.post('/', async (req: any, res: any) => {
 /**
  * Update created team
  */
-teamRouter.patch('/:teamId', async (req: any, res: any) => {
+teamRouter.patch('/:teamId', async (req: express.Request, res: express.Response) => {
 
     if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -74,7 +74,7 @@ teamRouter.patch('/:teamId', async (req: any, res: any) => {
 /**
  * Allow users to invite new players in their team 
  */
-teamRouter.post('/invitation/:teamId', async (req: any, res: any) => {
+teamRouter.post('/invitation/:teamId', async (req: express.Request, res: express.Response) => {
 
     if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -97,7 +97,7 @@ teamRouter.post('/invitation/:teamId', async (req: any, res: any) => {
 /**
  * Delete team
  */
-teamRouter.delete('/:teamId', async (req: any, res: any) => {
+teamRouter.delete('/:teamId', async (req: express.Request, res: express.Response) => {
 
     if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 

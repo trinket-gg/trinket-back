@@ -4,13 +4,14 @@ const jwt = require('jsonwebtoken')
 import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
+import auth from '../middlewares/auth.middleware'
 
 const userRouter = express.Router()
 
 /**
  * Get all users
  */
-userRouter.get('/', async (_, res: any) => {
+userRouter.get('/', auth, async (_, res: any) => {
   const result = await User.find()
   res.json(result)
 })
@@ -18,7 +19,7 @@ userRouter.get('/', async (_, res: any) => {
 /**
  * Get user by id
  */
-userRouter.get('/:userId', async (req: any, res: any) => {
+userRouter.get('/:userId', async (req: express.Request, res: express.Response) => {
   
   if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -36,7 +37,7 @@ userRouter.get('/:userId', async (req: any, res: any) => {
 /**
  * Create new user
  */
-userRouter.post('/', async (req: any, res: any) => {
+userRouter.post('/', async (req: express.Request, res: express.Response) => {
 
   const user = new User({
     _id: new mongoose.Types.ObjectId(),
@@ -55,7 +56,7 @@ userRouter.post('/', async (req: any, res: any) => {
 /**
  * User created login
  */
-userRouter.post('/login', async (req: any, res: any) => {
+userRouter.post('/login', async (req: express.Request, res: express.Response) => {
 
   const user = await User.findOne({ email: req.body?.email })
 
@@ -85,7 +86,7 @@ userRouter.post('/login', async (req: any, res: any) => {
 /**
  * Update user
  */
-userRouter.patch('/:userId', async (req: any, res: any) => {
+userRouter.patch('/:userId', async (req: express.Request, res: express.Response) => {
 
   if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -109,7 +110,7 @@ userRouter.patch('/:userId', async (req: any, res: any) => {
 /**
  * Allow users to invite new players in their team 
  */
-userRouter.post('/invitation/:teamId', async (req: any, res: any) => {
+userRouter.post('/invitation/:teamId', async (req: express.Request, res: express.Response) => {
 
   if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -134,7 +135,7 @@ userRouter.post('/invitation/:teamId', async (req: any, res: any) => {
 /**
  * Delete user
  */
-userRouter.delete('/:userId', async (req: any, res: any) => {
+userRouter.delete('/:userId', async (req: express.Request, res: express.Response) => {
 
   if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
