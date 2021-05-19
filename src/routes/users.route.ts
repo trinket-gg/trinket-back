@@ -11,7 +11,7 @@ const userRouter = express.Router()
 /**
  * Get all users
  */
-userRouter.get('/', auth, async (_, res: any) => {
+userRouter.get('/', async (_, res: any) => {
   const result = await User.find()
   res.json(result)
 })
