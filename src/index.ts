@@ -1,5 +1,4 @@
 import express, { Express } from "express";
-import bodyParser from "body-parser";
 
 import { config } from "dotenv";
 config();
@@ -8,7 +7,6 @@ import { buildRoutes } from "./routes";
 
 const app: Express = express();
 
-const path = require('path')
 const mongoose = require('mongoose')
 
 try {
