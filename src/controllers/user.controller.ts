@@ -36,4 +36,32 @@ export class UserController {
         return true;
     }
 
+    /**
+     * 
+     * isPlayerOf
+     * 
+     * Verify if an user is a player of a specify team
+     * 
+     * @param user_id 
+     * @param team_id 
+     */
+    public async isPlayerOf(user_id: string, team_id: string): Promise<boolean> {
+        let sameId: boolean = false;
+
+        const team = await Team.findById(team_id);
+
+        if(!team)
+            return false;
+
+        team.user_ids.forEach( (id, index) => {
+            if( user_id === id.toString() ){
+                sameId = true;
+            }
+        });
+
+        if(sameId) return true;
+
+        return false;
+    }
+
 }
