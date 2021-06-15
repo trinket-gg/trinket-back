@@ -1,14 +1,16 @@
 import mongoose from 'mongoose';
-import express from "express";
+import express, { Express } from "express";
+import * as socketio from 'socket.io';
 import { Team, ITeam } from '../models';
-import { TeamController } from '../controllers';
+import { TeamController, UserController } from '../controllers';
+import { adminMiddleware } from '../middlewares/admin.middleware';
 
 const teamRouter = express.Router()
 
 /**
  * Get all teams
  */
- teamRouter.get('/', async (req: any, res: any) => {
+teamRouter.get('/', async (req: any, res: any) => {
     const result = await Team.find();
     res.json({ res: result });
 })
@@ -92,6 +94,32 @@ teamRouter.post('/invitation/:teamId', async (req: any, res: any) => {
     if(!inviteUsers) return res.status(409).end();
         
     res.status(200).end();
+})
+
+/**
+ * Create team lobby to start a matchmaking
+ */
+teamRouter.post('/lobby/:teamId', async (req: any, res: any) => {
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+    const teamExist = await Team.findById(req.params.teamId)
+
+    if (!teamExist) return res.status(404).end();
+
+    const userId = req.body.user_id;
+
+    if(userId === undefined) return res.status(400).end();
+
+    const userController = new UserController();
+    const isPlayerOf = await userController.isPlayerOf(userId, req.params.teamId);
+
+    if(!isPlayerOf) return res.status(500).end();
+
+    if (teamExist) {    
+        res.sendFile(__dirname + '/socket.html');
+    } else {
+        res.status(404).end();
+    }
 })
 
 /**
