@@ -108,12 +108,12 @@ teamRouter.post('/lobby/:teamId', async (req: any, res: any) => {
 
     const userId = req.body.user_id;
 
-    if(userId === undefined) return res.status(400).end();
+    if(userId === undefined) return res.status(403).end();
 
     const userController = new UserController();
     const isPlayerOf = await userController.isPlayerOf(userId, req.params.teamId);
 
-    if(!isPlayerOf) return res.status(500).end();
+    if(!isPlayerOf) return res.status(401).end();
 
     if (teamExist) {    
         res.sendFile(__dirname + '/socket.html');
