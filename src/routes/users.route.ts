@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
+import { authMiddleware } from '../middlewares';
 
 const userRouter = express.Router()
 
@@ -109,7 +110,7 @@ userRouter.patch('/:userId', async (req: any, res: any) => {
 /**
  * Allow users to invite new players in their team 
  */
-userRouter.post('/invitation/:teamId', async (req: any, res: any) => {
+userRouter.post('/invitation/:teamId', authMiddleware, async (req: any, res: any) => {
 
   if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
@@ -119,12 +120,10 @@ userRouter.post('/invitation/:teamId', async (req: any, res: any) => {
   const userres = req.body.res;
   if (userres === undefined) return res.status(404).end();
 
-  // Get user id by COOKIE
-  
-  // Add verif
+  const userId = req.user._id;
 
   const userController = new UserController();
-  const resInvitation = await userController.replyInvitation("609c09c4a9e7f40469c7e163", req.params.teamId, userres);
+  const resInvitation = await userController.replyInvitation(userId, req.params.teamId, userres);
 
   if(!resInvitation) return res.status(409).end();
       
