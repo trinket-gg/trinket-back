@@ -1,22 +1,25 @@
 const jwt = require('jsonwebtoken')
 import { User } from '../models'
 
-export default async function authMiddleware(request: any, reply: any, next: any) {
+async function authMiddleware(request: any, reply: any, next: any) {
 
-  const token = request.headers('Authorization')
-  if (!token) return reply.code(401).send('')
+  const auth = request.headers['authorization'];
+  if (!auth) return reply.status(401).send('');
 
   try {
-    const verified = jwt.verify(token, process.env.TOKEN_SECRET)
+    const token = auth.slice(7);
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET);
 
     const user = await User.findById(verified._id)
-    if(!user?.tokens.includes(token)) return reply.code(400).send('')
+    if(!user?.tokens.includes(token)) return reply.status(400).send('');
 
-    request.user = verified
+    request.user = verified;
   } catch (err) {
-    return reply.code(400).send('')
+    return reply.status(400).send('');
   }
 
   next()
   
 }
+
+export { authMiddleware };
