@@ -25,24 +25,29 @@ export class MatchmakingController {
         return found; //return game object if opponent found
     }
 
-    public async cancelQueue(team: ITeam): Promise<Boolean> {
-        this.queue = this.queue.filter((teamQ) => {
-             return teamQ !== team;
-        });
-        return true;
-    }
-
     private async findOpponent(team: ITeam): Promise<any |boolean> {
-        const opponent: ITeam[] = this.queue.filter((teamQ) => {
-            return teamQ.elo < team.elo + 50 && teamQ.elo > team.elo - 50;
-        });
-        if (opponent.length > 0) {
-            await this.cancelQueue(opponent[0]);
+        const opponentIndex: number = await this.fastResearch(0, this.queue.length, team.elo);
+        if (opponentIndex !== -1) {
+            const team2 = this.queue[opponentIndex];
+            this.queue.splice(opponentIndex, 1);
             return {
-                team1: opponent[0],
-                team2: team
+                team1: team,
+                team2: team2
             };
         }
         return false;
+    }
+
+    private async fastResearch(low: number, high: number, elo: number): Promise<number> {
+        if (high >= low) {
+            const mid: number = low + (high - low) / 2;
+            if ((mid == 0 || elo > this.queue[mid - 1].elo + 50) && this.queue[mid].elo - 50 < elo && elo < this.queue[mid].elo + 50)
+                return mid;
+            else if (elo > this.queue[mid].elo + 50)
+                return this.fastResearch((mid + 1), high, elo);
+            else
+                return this.fastResearch(low, (mid - 1), elo);
+        }
+        return -1;
     }
 }
