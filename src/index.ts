@@ -5,6 +5,8 @@ config();
 
 import { buildRoutes } from "./routes";
 
+import cors from "cors";
+
 const app: Express = express();
 
 const mongoose = require('mongoose')
@@ -14,6 +16,12 @@ try {
 } catch (e) {
   console.error(e)
 }
+
+const options: cors.CorsOptions = {
+  origin: 'http://localhost:3000'
+};
+
+app.use(cors(options))
 
 app.use(express.json())
 
