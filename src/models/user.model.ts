@@ -5,7 +5,6 @@ export interface IUser extends Document {
   _id: string,
   email: string,
   password: string,
-  username: string,
   username_riot: string,
   birthdate: Date,
   tokens: [string]
@@ -15,7 +14,6 @@ const userSchema = new Schema({
   _id: mongoose.Schema.Types.ObjectId,
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  username: { type : String, required: true },
   username_riot: { type: String, required: true },
   birthdate: Date,
   tokens: [String]
