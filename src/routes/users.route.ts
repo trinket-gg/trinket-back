@@ -65,7 +65,7 @@ userRouter.post('/login', async (req: express.Request, res: express.Response) =>
     const validPwd = await bcrypt.compare(req.body?.password ?? '', user.password)
     if (!validPwd) return res.status(400).end()
 
-    const token = jwt.sign({ _id : user._id }, process.env.TOKEN_SECRET)
+    const token = jwt.sign({ user: { _id: user._id, email: user.email, password: user.password, username_riot: user.username_riot, birthdate: user.birthdate }}, process.env.TOKEN_SECRET)
 
     try {
       user.tokens.push(token)
