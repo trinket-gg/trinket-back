@@ -48,7 +48,7 @@ userRouter.post('/', async (req: express.Request, res: express.Response) => {
     const newUser = await user.save()
     res.status(201).json({ res: newUser })
   } catch (err) { 
-    res.status(400).end()
+    res.status(400).json(err.message)
   }
 
 })

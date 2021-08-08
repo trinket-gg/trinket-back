@@ -1,5 +1,6 @@
 import mongoose, {Schema, Document} from 'mongoose'
 const bcrypt = require('bcrypt');
+const RiotRequest = require('riot-lol-api');
 
 export interface IUser extends Document {
   _id: string,
@@ -21,9 +22,16 @@ const userSchema = new Schema({
 
 userSchema.pre<IUser>('save', async function(next: any) {
 
+  if (this.isModified('username_riot')) {
+    const riotRequest = new RiotRequest(process.env.RIOT_API_KEY)
+    riotRequest.request('euw1', 'summoner', `/lol/summoner/v4/summoners/by-name/${this.username_riot}`, (err : any, data : any) => {
+        if (data?.status?.status_code == 404) return next(new Error('usernameRiot'))
+    });
+  }
+
   if (this.isModified('email')) {
     const emailExists: boolean = await User.exists({ email: this.email })
-    if (emailExists) return next(new Error('Email already exists !'))
+    if (emailExists) return next(new Error('emailExist'))
   }
 
   if (!this.isModified("password")) return next()
