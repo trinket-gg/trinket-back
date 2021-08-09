@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const RiotRequest = require('riot-lol-api');
 import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
@@ -39,17 +40,29 @@ userRouter.get('/:userId', async (req: express.Request, res: express.Response) =
  */
 userRouter.post('/', async (req: express.Request, res: express.Response) => {
 
-  const user = new User({
-    _id: new mongoose.Types.ObjectId(),
-    ...req.body
-  })
+  const riotRequest = new RiotRequest(process.env.RIOT_API_KEY)
+  riotRequest.request('euw1', 'summoner', `/lol/summoner/v4/summoners/by-name/${req.body.username_riot}`, async (err : any, data : any) => {
+    console.log(data)
+    if (data?.status?.status_code == 404) {
+      res.status(400).json('usernameRiot')
+    } else {
+      req.body.riot_summoner = data
+      delete req.body.username_riot
 
-  try { 
-    const newUser = await user.save()
-    res.status(201).json({ res: newUser })
-  } catch (err) { 
-    res.status(400).json(err.message)
-  }
+      const user = new User({
+        _id: new mongoose.Types.ObjectId(),
+        ...req.body,
+      })
+
+      try {
+        const newUser = await user.save()
+        res.status(201).json({ res: newUser })
+      } catch (err) {
+        res.status(400).json(err.message)
+      }
+
+    }
+  })
 
 })
 
@@ -65,7 +78,7 @@ userRouter.post('/login', async (req: express.Request, res: express.Response) =>
     const validPwd = await bcrypt.compare(req.body?.password ?? '', user.password)
     if (!validPwd) return res.status(400).end()
 
-    const token = jwt.sign({ user: { _id: user._id, email: user.email, password: user.password, username_riot: user.username_riot, birthdate: user.birthdate }}, process.env.TOKEN_SECRET)
+    const token = jwt.sign({ user: { _id: user._id, email: user.email, password: user.password, riot_summoner: user.riot_summoner, birthdate: user.birthdate }}, process.env.TOKEN_SECRET)
 
     try {
       user.tokens.push(token)
