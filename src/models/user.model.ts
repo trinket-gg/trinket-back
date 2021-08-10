@@ -40,9 +40,7 @@ userSchema.pre<IUser>(['save', 'updateOne'], async function(next: any) {
  
   if (this.isModified('riot_summoner.name')) {
     const response = await fetch(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${this.riot_summoner.name}`, {
-      headers: {
-        'X-Riot-Token': process.env.RIOT_API_KEY
-      }
+      headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
     })
     const data = await response.json()
 

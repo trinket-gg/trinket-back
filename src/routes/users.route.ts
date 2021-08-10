@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
 import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
 import auth from '../middlewares/auth.middleware'
+
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const fetch = require("node-fetch");
 
 const userRouter = express.Router()
 
@@ -24,8 +26,19 @@ userRouter.get('/:userId', async (req: express.Request, res: express.Response) =
   if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
   const result = await User.findById(req.params.userId)
-  
+
   if (result) {
+    const response = await fetch(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-account/${result?.riot_summoner?.accountId}`, {
+      headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+    })
+    const data = await response.json()
+
+    if (data?.status?.status_code == 404) {
+      return res.status(404).end()
+    } else if (Object.entries(data).toString() !== Object.entries(result?.toJSON().riot_summoner).toString()) {
+      result.riot_summoner = data
+      result.save()
+    }
     res.json({ res: result })
   } else {
     res.status(404).end()
