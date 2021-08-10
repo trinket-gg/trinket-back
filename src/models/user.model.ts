@@ -34,6 +34,9 @@ const userSchema = new Schema({
   },
   birthdate: Date,
   tokens: [String]
+},{
+  timestamps: true, // add createdAt and updatedAt
+  versionKey: false // remove __v proprety
 });
 
 userSchema.pre<IUser>(['save', 'updateOne'], async function(next: any) {

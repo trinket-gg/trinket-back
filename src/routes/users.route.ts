@@ -37,7 +37,7 @@ userRouter.get('/:userId', async (req: express.Request, res: express.Response) =
       return res.status(404).end()
     } else if (Object.entries(data).toString() !== Object.entries(result?.toJSON().riot_summoner).toString()) {
       result.riot_summoner = data
-      result.save()
+      await result.save()
     }
     res.json({ res: result })
   } else {
