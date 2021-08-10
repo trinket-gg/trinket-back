@@ -1,11 +1,12 @@
 {
   "dependencies": {
+    "@types/node-fetch": "^2.5.12",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "mongodb": "^3.6.6",
     "mongoose": "^5.12.7",
-    "riot-lol-api": "^4.3.3",
+    "node-fetch": "^2.6.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
   },

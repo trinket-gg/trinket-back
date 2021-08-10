@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const RiotRequest = require('riot-lol-api');
 import express from "express";
 import { UserController } from '../controllers/user.controller';
 import { Team, User } from '../models'
@@ -40,29 +39,20 @@ userRouter.get('/:userId', async (req: express.Request, res: express.Response) =
  */
 userRouter.post('/', async (req: express.Request, res: express.Response) => {
 
-  const riotRequest = new RiotRequest(process.env.RIOT_API_KEY)
-  riotRequest.request('euw1', 'summoner', `/lol/summoner/v4/summoners/by-name/${req.body.username_riot}`, async (err : any, data : any) => {
-    console.log(data)
-    if (data?.status?.status_code == 404) {
-      res.status(400).json('usernameRiot')
-    } else {
-      req.body.riot_summoner = data
-      delete req.body.username_riot
-
-      const user = new User({
-        _id: new mongoose.Types.ObjectId(),
-        ...req.body,
-      })
-
-      try {
-        const newUser = await user.save()
-        res.status(201).json({ res: newUser })
-      } catch (err) {
-        res.status(400).json(err.message)
-      }
-
+  const user = new User({
+    _id: new mongoose.Types.ObjectId(),
+    ...req.body,
+    riot_summoner: {
+      name: req.body.username_riot
     }
   })
+
+  try {
+    const newUser = await user.save()
+    res.status(201).json({ res: newUser })
+  } catch (err) {
+    res.status(400).json(err.message)
+  }
 
 })
 
@@ -78,7 +68,7 @@ userRouter.post('/login', async (req: express.Request, res: express.Response) =>
     const validPwd = await bcrypt.compare(req.body?.password ?? '', user.password)
     if (!validPwd) return res.status(400).end()
 
-    const token = jwt.sign({ user: { _id: user._id, email: user.email, password: user.password, riot_summoner: user.riot_summoner, birthdate: user.birthdate }}, process.env.TOKEN_SECRET)
+    const token = jwt.sign({ _id: user._id }, process.env.TOKEN_SECRET)
 
     try {
       user.tokens.push(token)
@@ -99,20 +89,19 @@ userRouter.post('/login', async (req: express.Request, res: express.Response) =>
 /**
  * Update user
  */
-userRouter.patch('/:userId', async (req: express.Request, res: express.Response) => {
+userRouter.patch('/:userId', auth, async (req: express.Request, res: express.Response) => {
 
   if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
-  const user = await User.findById(req.params.userId)
+  const userModified = await User.findById(req.params.userId)
 
-  if (user) {
+  if (userModified) {
     try {
-      user.set(req.body)
-      await user.save()
-
+      userModified.set({...req.body, riot_summoner: { name : req.body.username_riot }})
+      await userModified.save()
       res.status(200).end()
     } catch (err) {
-      res.status(400).end()
+      res.status(400).json(err.message)
     }
   } else {
     return res.status(404).end()

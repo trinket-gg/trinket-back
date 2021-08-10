@@ -11,7 +11,7 @@ export default async (req: express.Request, res: express.Response, next: express
     const tokenPayload = jwt.verify(token, process.env.TOKEN_SECRET)
 
     const user = await User.findById(tokenPayload._id)
-    if(!user?.tokens.includes(token)) return res.status(401).end()
+    //if(!user?.tokens.includes(token)) return res.status(401).end()
 
     req.params.user = tokenPayload
   } catch (err) {
