@@ -1,0 +1,47 @@
+<html>
+<body>
+<script src="https://cdn.socket.io/4.1.1/socket.io.min.js" integrity="sha384-cdrFIqe3RasCMNE0jeFG9xJHog/tgOVC1E9Lzve8LQN1g5WUHo0Kvk1mawWjxX7a" crossorigin="anonymous"></script>
+
+<form id="form" action="">
+    <input type="text" id="idUser" placeholder="user">
+    <input type="text" id="idRoom" placeholder="room">
+    <input type="submit" value="Join the lobby" id="joinLobby">
+</form>
+<form id="form2" action="">
+    <input type="submit" value="Show user in lobby" id="showLobby">
+</form>
+<form id="form3" action="">
+    <input type="submit" value="Find a game" id="findGame">
+</form>
+
+<script>
+
+    const socket = io();
+    
+    var form = document.getElementById('form');
+    var form2 = document.getElementById('form2');
+    var idUser = document.getElementById('idUser');
+    var idRoom = document.getElementById('idRoom');
+    var showLobby = document.getElementById('showLobby');
+    var findGame = document.getElementById('findGame');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (idRoom.value) {
+            socket.emit('join-room', idRoom.value, idUser.value);
+        }
+    });
+
+    form2.addEventListener('submit', function(e) {
+        e.preventDefault();
+        socket.emit('show-user-room', idRoom.value);
+    });
+
+    form3.addEventListener('submit', function(e) {
+        e.preventDefault();
+        socket.emit('find-game', idRoom.value);
+    });
+    
+</script>
+</body>
+</html>

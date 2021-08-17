@@ -82,7 +82,6 @@ userRouter.post('/login', async (req: any, res: any) => {
 
 })
 
-
 /**
  * Update user
  */

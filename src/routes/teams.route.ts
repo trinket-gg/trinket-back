@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import express, { Express } from "express";
 import * as socketio from 'socket.io';
 import { Team, ITeam } from '../models';
-import { TeamController, UserController } from '../controllers';
-import { adminMiddleware } from '../middlewares/admin.middleware';
+import { TeamController, UserController, MatchmakingController } from '../controllers';
+import { authMiddleware } from '../middlewares';
 
 const teamRouter = express.Router()
 
@@ -97,16 +97,31 @@ teamRouter.post('/invitation/:teamId', async (req: any, res: any) => {
 })
 
 /**
- * Create team lobby to start a matchmaking
+ * Crete new team lobby
  */
-teamRouter.post('/lobby/:teamId', async (req: any, res: any) => {
+teamRouter.get('/create/:teamId', async (req: any, res: any) => {    
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end();
+
+    const teamExist = await Team.findById(req.params.teamId);
+
+    if (teamExist) {
+        res.sendFile(__dirname + '/ready.html');
+    } else {
+        res.status(404).end();
+    }
+});
+
+/**
+ * Join a team lobby to start a matchmaking
+ */
+teamRouter.get('/lobby/:teamId', /*authMiddleware,*/ async (req: any, res: any) => {
     if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
 
     const teamExist = await Team.findById(req.params.teamId)
 
     if (!teamExist) return res.status(404).end();
 
-    const userId = req.body.user_id;
+    const userId = '60c8d9309fe81b008b414ab1'/*req.user._id*/;
 
     if(userId === undefined) return res.status(403).end();
 
@@ -116,7 +131,27 @@ teamRouter.post('/lobby/:teamId', async (req: any, res: any) => {
     if(!isPlayerOf) return res.status(401).end();
 
     if (teamExist) {    
-        res.sendFile(__dirname + '/socket.html');
+        res.sendFile(__dirname + '/join.html');
+    } else {
+        res.status(404).end();
+    }
+});
+
+/**
+ * Find an ennemy team
+ */
+teamRouter.get('/find/:teamId', authMiddleware, async (req: any, res: any) => {
+    if (!req.params.teamId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+    const teamExist = await Team.findById(req.params.teamId)
+
+    if (!teamExist) return res.status(404).end();
+
+    const matchmakingController = new MatchmakingController();
+    const joinQueue = await matchmakingController.joinQueue(teamExist);
+
+    if (joinQueue) {    
+        res.status(201).json({ res: teamExist });
     } else {
         res.status(404).end();
     }
