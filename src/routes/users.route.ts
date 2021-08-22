@@ -28,18 +28,24 @@ userRouter.get('/:userId', async (req: express.Request, res: express.Response) =
   const result = await User.findById(req.params.userId)
 
   if (result) {
-    const response = await fetch(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-account/${result?.riot_summoner?.accountId}`, {
-      headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
-    })
-    const data = await response.json()
+    try {
+      const response = await fetch(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-account/${result?.riot_summoner?.accountId}`, {
+        headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+      })
+      const data = await response.json()
 
-    if (data?.status?.status_code == 404) {
-      return res.status(404).end()
-    } else if (Object.entries(data).toString() !== Object.entries(result?.toJSON().riot_summoner).toString()) {
-      result.riot_summoner = data
-      await result.save()
+      if (data?.status?.status_code == 404) {
+        return res.status(404).json('usernameRiot')
+      } else if (Object.entries(data).toString() !== Object.entries(result?.toJSON().riot_summoner).toString()) {
+        result.riot_summoner = data
+        await result.save()
+      }
+      res.json({ res: result })
+
+    } catch (e) {
+      res.status(400).end()
     }
-    res.json({ res: result })
+
   } else {
     res.status(404).end()
   }
@@ -110,7 +116,7 @@ userRouter.patch('/:userId', auth, async (req: express.Request, res: express.Res
 
   if (userModified) {
     try {
-      userModified.set({...req.body, riot_summoner: { name : req.body.username_riot }})
+      userModified.set(req.body)
       await userModified.save()
       res.status(200).end()
     } catch (err) {
@@ -118,6 +124,51 @@ userRouter.patch('/:userId', auth, async (req: express.Request, res: express.Res
     }
   } else {
     return res.status(404).end()
+  }
+
+})
+
+/**
+ * Verify user riot account
+ */
+ userRouter.post('/verifyRiotCode/:userId', auth, async (req: express.Request, res: express.Response) => {
+
+  if (!req.params.userId.match(/^[0-9a-fA-F]{24}$/)) return res.status(400).end()
+
+  const result = await User.findById(req.params.userId)
+
+  if (result) {
+
+    try {
+
+      console.log(process.env.RIOT_API_KEY);
+      
+      const response = await fetch(`https://euw1.api.riotgames.com/lol/platform/v4/third-party-code/by-summoner/${result.riot_summoner.id}`, {
+        headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+      })
+      
+      const data = await response.json()
+
+      console.log(req.body.generatedCode);
+      console.log(data);
+      console.log(req.body.generatedCode === data);
+      
+      if (data?.status?.status_code === 400) {
+        return res.status(400).json('problemRiot')
+      } else if (req.body.generatedCode === data) {
+        result.riotAccountValidate = true
+        await result.save()
+      } else {
+        return res.status(400).json('codesDoNotMatch')
+      }
+      
+      res.status(200).end()
+
+    } catch (e) {
+      res.status(400).end()
+    }
+  } else {
+    res.status(400).end()
   }
 
 })

@@ -6,6 +6,7 @@ export interface IUser extends Document {
   _id: string,
   email: string,
   password: string,
+  riotAccountValidate: boolean,
   riot_summoner: { 
     accountId: string,
     profileIconId: number,
@@ -23,6 +24,7 @@ const userSchema = new Schema({
   _id: mongoose.Schema.Types.ObjectId,
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  riotAccountValidate: Boolean,
   riot_summoner: {
     accountId: String,
     profileIconId: Number,
@@ -51,6 +53,7 @@ userSchema.pre<IUser>(['save', 'updateOne'], async function(next: any) {
       return next(new Error('usernameRiot'))
     } else {
       this.riot_summoner = data
+      this.riotAccountValidate = false
     }
   }
 
